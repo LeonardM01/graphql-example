@@ -36,6 +36,14 @@ input PostOrderByUpdatedAtInput {
   updatedAt: SortOrder!
 }
 
+type PostStats {
+  averageViewsPerPost: Float
+  publishedPosts: Int
+  topAuthors: [User!]
+  totalPosts: Int
+  totalViews: Int
+}
+
 input PostWhereInput {
   authorName: String
   content: String
@@ -50,6 +58,7 @@ type Query {
   feed(orderBy: PostOrderByUpdatedAtInput, searchString: String, skip: Int, take: Int): [Post!]
   filteredPosts(where: PostWhereInput): [Post!]
   postById(id: Int!): Post
+  postStats: PostStats
 }
 
 enum SortOrder {

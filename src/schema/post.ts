@@ -63,6 +63,43 @@ const DateRangeInput = builder.inputType('DateRangeInput', {
   }),
 })
 
+const PostStats = builder.objectType(builder.objectRef<any>('PostStats'), {
+  fields: (t) => ({
+    totalPosts: t.int({
+      resolve: () => prisma.post.count(),
+    }),
+    publishedPosts: t.int({
+      resolve: () => prisma.post.count({ where: { published: true } }),
+    }),
+    totalViews: t.int({
+      resolve: async () => {
+        const result = await prisma.post.aggregate({
+          _sum: { viewCount: true },
+        })
+        return result._sum.viewCount || 0
+      },
+    }),
+    averageViewsPerPost: t.float({
+      resolve: async () => {
+        const [totalPosts, totalViews] = await Promise.all([
+          prisma.post.count(),
+          prisma.post.aggregate({ _sum: { viewCount: true } }),
+        ])
+        return totalPosts ? (totalViews._sum.viewCount || 0) / totalPosts : 0
+      },
+    }),
+    topAuthors: t.prismaField({
+      type: ['User'],
+      resolve: (query) =>
+        prisma.user.findMany({
+          ...query,
+          take: 5,
+          orderBy: { posts: { _count: 'desc' } },
+        }),
+    }),
+  }),
+})
+
 builder.queryFields((t) => ({
   postById: t.prismaField({
     type: 'Post',
@@ -117,7 +154,7 @@ builder.queryFields((t) => ({
         required: true,
       }),
     },
-    resolve: (query, parent, args) => {
+    resolve: (query, _parent, args) => {
       return prisma.user
         .findUnique({
           where: {
@@ -167,6 +204,10 @@ builder.queryFields((t) => ({
         where,
       })
     },
+  }),
+  postStats: t.field({
+    type: PostStats,
+    resolve: () => ({ __typename: 'PostStats' } as any),
   }),
 }))
 
