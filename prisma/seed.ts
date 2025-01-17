@@ -9,6 +9,7 @@ const userData: Prisma.UserCreateInput[] = [
     posts: {
       create: [
         {
+          createdAt: new Date().setDate(new Date().getDate() - 5).toString(),
           title: 'Join the Prisma Discord',
           content: 'https://pris.ly/discord',
           published: true,
@@ -23,6 +24,7 @@ const userData: Prisma.UserCreateInput[] = [
       create: [
         {
           title: 'Follow Prisma on Twitter',
+          createdAt: new Date().setDate(new Date().getDate() - 1).toString(),
           content: 'https://www.twitter.com/prisma',
           published: true,
           viewCount: 42,
@@ -36,6 +38,7 @@ const userData: Prisma.UserCreateInput[] = [
     posts: {
       create: [
         {
+          createdAt: new Date().setDate(new Date().getDate() - 3).toString(),
           title: 'Ask a question about Prisma on GitHub',
           content: 'https://www.github.com/prisma/prisma/discussions',
           published: true,
