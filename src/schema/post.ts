@@ -285,4 +285,35 @@ builder.mutationFields((t) => ({
       })
     },
   }),
+  batchUpdatePosts: t.prismaField({
+    type: ['Post'],
+    args: {
+      ids: t.arg.intList({ required: true }),
+      data: t.arg({
+        type: PostCreateInput,
+        required: true,
+      }),
+    },
+    resolve: async (query, parent, args) => {
+      await prisma.$transaction(
+        args.ids.map((id) =>
+          prisma.post.update({
+            where: { id },
+            data: {
+              title: args.data.title,
+              content: args.data.content ?? undefined,
+            },
+          }),
+        ),
+      )
+      return prisma.post.findMany({
+        ...query,
+        where: {
+          id: {
+            in: args.ids,
+          },
+        },
+      })
+    },
+  }),
 }))
