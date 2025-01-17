@@ -38,6 +38,31 @@ const PostOrderByUpdatedAtInput = builder.inputType(
   },
 )
 
+const PostWhereInput = builder.inputType('PostWhereInput', {
+  fields: (t) => ({
+    title: t.string(),
+    content: t.string(),
+    publishedBetween: t.field({
+      type: DateRangeInput,
+    }),
+    minViewCount: t.int(),
+    authorName: t.string(),
+  }),
+})
+
+const DateRangeInput = builder.inputType('DateRangeInput', {
+  fields: (t) => ({
+    start: t.field({
+      type: 'DateTime',
+      required: true,
+    }),
+    end: t.field({
+      type: 'DateTime',
+      required: true,
+    }),
+  }),
+})
+
 builder.queryFields((t) => ({
   postById: t.prismaField({
     type: 'Post',
@@ -106,6 +131,41 @@ builder.queryFields((t) => ({
             published: false,
           },
         })
+    },
+  }),
+  filteredPosts: t.prismaField({
+    type: ['Post'],
+    args: {
+      where: t.arg({ type: PostWhereInput }),
+    },
+    resolve: (query, parent, args) => {
+      const where: any = {}
+
+      if (args.where?.title) {
+        where.title = { contains: args.where.title }
+      }
+      if (args.where?.content) {
+        where.content = { contains: args.where.content }
+      }
+      if (args.where?.publishedBetween) {
+        where.createdAt = {
+          gte: args.where.publishedBetween.start,
+          lte: args.where.publishedBetween.end,
+        }
+      }
+      if (args.where?.minViewCount) {
+        where.viewCount = { gte: args.where.minViewCount }
+      }
+      if (args.where?.authorName) {
+        where.author = {
+          name: { contains: args.where.authorName },
+        }
+      }
+
+      return prisma.post.findMany({
+        ...query,
+        where,
+      })
     },
   }),
 }))
